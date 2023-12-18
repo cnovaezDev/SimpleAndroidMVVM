@@ -4,17 +4,23 @@ import com.cursokotlin.mvvmexample.data.QuoteRepository
 import com.cursokotlin.mvvmexample.domain.model.Quote
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.impl.annotations.RelaxedMockK
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
-
+/**
+ * Created by Carlos A. Novaez Guerrero on 15/11/2023 16:26
+ * cnovaez.dev@outlook.com
+ */
 class GetRandomQuoteUseCaseTest {
+
     @RelaxedMockK
     private lateinit var quoteRepository: QuoteRepository
 
-    lateinit var getRandomQuoteUseCase: GetRandomQuoteUseCase
+    private lateinit var getRandomQuoteUseCase: GetRandomQuoteUseCase
 
     @Before
     fun onBefore() {
@@ -22,23 +28,31 @@ class GetRandomQuoteUseCaseTest {
         getRandomQuoteUseCase = GetRandomQuoteUseCase(quoteRepository)
     }
 
+
     @Test
-    fun `when database is empty then return null`() = runBlocking {
+    fun `when there is no quote on database return null`() = runBlocking {
+        //Given
         coEvery { quoteRepository.getAllQuotesFromDatabase() } returns emptyList()
-
+        //When
         val response = getRandomQuoteUseCase()
-
+        //Then
+        coVerify(exactly = 1) { quoteRepository.getAllQuotesFromDatabase() }
         assert(response == null)
     }
 
     @Test
-    fun `when database is not empty then return quote`() = runBlocking {
-        val quoteList = listOf(Quote("Holi", "AristiDevs"))
+    fun `when the database returns some quotes then show one random`() = runBlocking {
+        //Given
+        val quotes = listOf(Quote("Hola", "Yo"), Quote("Adios", "Tu"))
+        coEvery { quoteRepository.getAllQuotesFromDatabase() } returns quotes
 
-        coEvery { quoteRepository.getAllQuotesFromDatabase() } returns quoteList
-
+        //When
         val response = getRandomQuoteUseCase()
-
-        assert(response == quoteList.first())
+        //Then
+        coVerify(exactly = 1) { quoteRepository.getAllQuotesFromDatabase() }
+        assert(response != null)
+        assert(quotes.contains(response))
     }
+
+
 }
